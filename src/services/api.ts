@@ -10,30 +10,56 @@ const API = axios.create({
 // Used for:
 // attaching JWT token
 // logging requests
-API.interceptors.request.use((request) => {
+// REQUEST INTERCEPTOR
+API.interceptors.request.use(
+  (config) => {
 
-    console.log("REQUEST:");
-    console.log(request);
-
+    // GET TOKEN FROM LOCAL STORAGE
     const token = localStorage.getItem("token");
 
+    console.log("TOKEN FROM STORAGE:", token);
+
+    // IF TOKEN EXISTS ATTACH IT
     if (token) {
-        request.headers.Authorization = `Bearer ${token}`;
+      config.headers.Authorization = `Bearer ${token}`;
     }
 
-    return request;
-});
+    console.log("REQUEST:");
+    console.log(config);
+
+    return config;
+  },
+
+  (error) => {
+    console.log("REQUEST ERROR:");
+    console.log(error);
+
+    return Promise.reject(error);
+  }
+);
+
 
 // Response Interceptor Runs AFTER every response.
 // Used for:
 // debugging
 // logging API responses
-API.interceptors.response.use((response) => {
+API.interceptors.response.use(
+  (response) => {
 
     console.log("RESPONSE:");
     console.log(response);
 
     return response;
-});
+  },
+
+  (error) => {
+
+    console.log("RESPONSE ERROR:");
+    console.log(error.response);
+
+    return Promise.reject(error);
+  }
+);
+
 
 export default API;
