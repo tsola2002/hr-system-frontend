@@ -154,6 +154,27 @@ export default function CustomersPage() {
     };
 
 
+    // ✅ DELETE FUNCTIONALITY
+    const deleteCustomer = async (id: number) => {
+        try {
+            const confirmDelete = window.confirm(
+                "Are you sure you want to delete this customer?"
+            );
+
+            if (!confirmDelete) return;
+
+            await API.delete(`/customers/${id}`);
+
+            toast.success("Customer deleted successfully");
+
+            fetchCustomers();
+
+        } catch (error) {
+            console.log(error);
+            toast.error("Failed to delete customer");
+        }
+    };
+
     const openCreateModal = () => {
 
         setModalMode("create");
@@ -289,7 +310,7 @@ export default function CustomersPage() {
                                             <Pencil size={18} />
                                         </button>
 
-                                        <button className="bg-red-500 text-white hover:bg-red-600 hover:scale-105 transition-all duration-200 p-2 rounded-lg">
+                                        <button onClick={() => deleteCustomer(customer.id)} className="bg-red-500 text-white hover:bg-red-600 hover:scale-105 transition-all duration-200 p-2 rounded-lg">
                                             <Trash2 size={18} />
                                         </button>
 
