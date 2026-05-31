@@ -9,7 +9,6 @@ import {
     Trash2,
     Plus,
     LogOut,
-    X
 } from "lucide-react";
 
 // shadcn dialog
@@ -18,7 +17,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 
 export default function CustomersPage() {
