@@ -20,11 +20,18 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { customerSchema, CustomerFormData } from "@/schemas/customerSchema";
 
 export default function CustomersPage() {
-  const [customers, setCustomers] = useState<Customer[]>([]);
 
-  const [openModal, setOpenModal] = useState(false);
+    const [customers, setCustomers] = useState<Customer[]>([]);
+    
+    const [openModal, setOpenModal] = useState(false);
 
-  const [modalMode, setModalMode] = useState<"create" | "edit">("create");
+    const [modalMode, setModalMode] = useState<"create" | "edit">("create");
+
+    const [deleteModalOpen, setDeleteModalOpen] =
+    useState(false);
+
+    const [customerToDelete, setCustomerToDelete] =
+    useState<Customer | null>(null);
 
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null,
@@ -52,14 +59,7 @@ export default function CustomersPage() {
     fetchCustomers();
   }, []);
 
-  // FORM STATE
-  // const [formData, setFormData] = useState(
-  //     {
-  //         name: "",
-  //         email: "",
-  //         address: "",
-  //         date_of_birth: "",
-  //     });
+
 
   const fetchCustomers = async () => {
     try {
@@ -77,85 +77,7 @@ export default function CustomersPage() {
     }
   };
 
-  // const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //     setFormData(
-  //         {
-  //             ...formData,
-  //             [e.target.name]: e.target.value,
-  //         });
-  // };
 
-  // CREATE CUSTOMER
-  // const createCustomer = async () => {
-  //     try {
-
-  //         setSaving(true);
-
-  //         console.log("SENDING CUSTOMER:", formData);
-
-  //         const response = await API.post("/customers", formData);
-
-  //         console.log("CREATE RESPONSE:", response.data);
-
-  //         toast.success("Customer created successfully");
-
-  //         // CLEAR FORM
-  //         setFormData({
-  //             name: "",
-  //             email: "",
-  //             address: "",
-  //             date_of_birth: "",
-  //         });
-
-  //         setOpenModal(false);
-
-  //         // REFRESH TABLE
-  //         fetchCustomers();
-  //     } catch (error) {
-  //         console.log(error);
-  //         toast.error("Failed to create customer");
-  //     } finally {
-  //         setSaving(false);
-  //     }
-  // };
-
-  // const saveCustomer = async () => {
-
-  //     try {
-
-  //         setSaving(true);
-
-  //         if (modalMode === "create") {
-
-  //             await API.post("/customers", formData);
-
-  //             toast.success("Customer created successfully");
-
-  //         } else {
-
-  //             await API.put(
-  //                 `/customers/${selectedCustomer?.id}`,
-  //                 formData
-  //             );
-
-  //             toast.success("Customer updated successfully");
-  //         }
-
-  //         setOpenModal(false);
-
-  //         fetchCustomers();
-
-  //     } catch (error) {
-
-  //         console.log(error);
-
-  //         toast.error("Operation failed");
-
-  //     } finally {
-
-  //         setSaving(false);
-  //     }
-  // };
 
   // CREATE AND UPDATE USING REACT HOOK FORM AND ZOD
   const saveCustomer = async (data: CustomerFormData) => {
@@ -187,24 +109,35 @@ export default function CustomersPage() {
   };
 
   // ✅ DELETE FUNCTIONALITY
-  const deleteCustomer = async (id: number) => {
-    try {
-      const confirmDelete = window.confirm(
-        "Are you sure you want to delete this customer?",
-      );
+  const deleteCustomer = async () => {
 
-      if (!confirmDelete) return;
+    if (!customerToDelete) return;
 
-      await API.delete(`/customers/${id}`);
+        try {
 
-      toast.success("Customer deleted successfully");
+            await API.delete(
+            `/customers/${customerToDelete.id}`
+            );
 
-      fetchCustomers();
-    } catch (error) {
-      console.log(error);
-      toast.error("Failed to delete customer");
-    }
-  };
+            toast.success(
+            "Customer deleted successfully"
+            );
+
+            setDeleteModalOpen(false);
+
+            setCustomerToDelete(null);
+
+            fetchCustomers();
+
+        } catch (error) {
+
+            console.log(error);
+
+            toast.error(
+            "Failed to delete customer"
+            );
+        }
+    };
 
   const openCreateModal = () => {
     setModalMode("create");
@@ -248,7 +181,14 @@ export default function CustomersPage() {
     });
 
     setOpenModal(true);
-  };
+    };
+    
+  const openDeleteModal = (customer: Customer) => {
+
+    setCustomerToDelete(customer);
+
+    setDeleteModalOpen(true);
+    };
 
   const logout = async () => {
     try {
@@ -329,7 +269,7 @@ export default function CustomersPage() {
                     </button>
 
                     <button
-                      onClick={() => deleteCustomer(customer.id)}
+                      onClick={() =>openDeleteModal(customer)}
                       className="bg-red-500 text-white hover:bg-red-600 hover:scale-105 transition-all duration-200 p-2 rounded-lg"
                     >
                       <Trash2 size={18} />
@@ -427,6 +367,62 @@ export default function CustomersPage() {
             </div>
             </form>
           </DialogContent>
+        </Dialog>
+              
+              {/* DELETE REUSABLE MODAL */}
+            <Dialog
+            open={deleteModalOpen}
+            onOpenChange={setDeleteModalOpen}
+            >
+                <DialogContent className="sm:max-w-md">
+
+                    <DialogHeader>
+
+                    <DialogTitle className="text-red-600">
+                        Delete Customer
+                    </DialogTitle>
+
+                    </DialogHeader>
+
+                    <div className="space-y-4">
+
+                <p>
+                    Are you sure you want to delete
+                    <strong>
+                    {" "}
+                    {customerToDelete?.name}
+                    {" "}
+                    </strong>
+                    ?
+                </p>
+
+                <p className="text-sm text-gray-500">
+                    This action cannot be undone.
+                </p>
+
+                <div className="flex justify-end gap-3">
+
+                    <button
+                    onClick={() =>
+                        setDeleteModalOpen(false)
+                    }
+                    className="px-4 py-2 border rounded-lg"
+                    >
+                    Cancel
+                    </button>
+
+                    <button
+                    onClick={deleteCustomer}
+                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
+                    >
+                    Delete
+                    </button>
+
+                </div>
+
+                </div>
+
+            </DialogContent>
         </Dialog>
       </div>
     </>
