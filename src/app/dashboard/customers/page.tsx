@@ -27,7 +27,17 @@ export default function CustomersPage() {
 
     const [openModal, setOpenModal] = useState(false);
 
+    const [modalMode, setModalMode] =
+        useState<"create" | "edit">("create");
+    
+    const [selectedCustomer, setSelectedCustomer] =
+    useState<Customer | null>(null);
+
     const [saving, setSaving] = useState(false);
+
+    useEffect(() => {
+        fetchCustomers();
+    }, []);
 
     
     // FORM STATE 
@@ -39,9 +49,7 @@ export default function CustomersPage() {
             date_of_birth: "",
         });
 
-    useEffect(() => {
-        fetchCustomers();
-    }, []);
+    
 
     const fetchCustomers = async () => {
 
@@ -73,38 +81,109 @@ export default function CustomersPage() {
     };
 
     // CREATE CUSTOMER 
-    const createCustomer = async () => {
+    // const createCustomer = async () => {
+    //     try {
+
+    //         setSaving(true);
+
+    //         console.log("SENDING CUSTOMER:", formData);
+            
+    //         const response = await API.post("/customers", formData);
+            
+    //         console.log("CREATE RESPONSE:", response.data);
+            
+    //         toast.success("Customer created successfully");
+            
+            
+    //         // CLEAR FORM
+    //         setFormData({
+    //             name: "",
+    //             email: "",
+    //             address: "",
+    //             date_of_birth: "",
+    //         });
+
+    //         setOpenModal(false);
+            
+    //         // REFRESH TABLE
+    //         fetchCustomers();
+    //     } catch (error) {
+    //         console.log(error);
+    //         toast.error("Failed to create customer");
+    //     } finally {
+    //         setSaving(false);
+    //     }
+    // };
+
+    const saveCustomer = async () => {
+
         try {
 
             setSaving(true);
 
-            console.log("SENDING CUSTOMER:", formData);
-            
-            const response = await API.post("/customers", formData);
-            
-            console.log("CREATE RESPONSE:", response.data);
-            
-            toast.success("Customer created successfully");
-            
-            
-            // CLEAR FORM
-            setFormData({
-                name: "",
-                email: "",
-                address: "",
-                date_of_birth: "",
-            });
+            if (modalMode === "create") {
+
+                await API.post("/customers", formData);
+
+                toast.success("Customer created successfully");
+
+            } else {
+
+                await API.put(
+                    `/customers/${selectedCustomer?.id}`,
+                    formData
+                );
+
+                toast.success("Customer updated successfully");
+            }
 
             setOpenModal(false);
-            
-            // REFRESH TABLE
+
             fetchCustomers();
+
         } catch (error) {
+
             console.log(error);
-            toast.error("Failed to create customer");
+
+            toast.error("Operation failed");
+
         } finally {
+
             setSaving(false);
         }
+    };
+
+
+    const openCreateModal = () => {
+
+        setModalMode("create");
+
+        setSelectedCustomer(null);
+
+        setFormData({
+            name: "",
+            email: "",
+            address: "",
+            date_of_birth: "",
+        });
+
+        setOpenModal(true);
+    };
+
+    const openEditModal = (customer: Customer) => {
+
+        setModalMode("edit");
+
+        setSelectedCustomer(customer);
+
+        setFormData({
+            name: customer.name,
+            email: customer.email,
+            address: customer.address,
+            date_of_birth: customer.date_of_birth,
+        });
+
+        setOpenModal(true);
     };
 
 
@@ -141,73 +220,19 @@ export default function CustomersPage() {
                     <div className="flex gap-3">
 
                 {/* ✅ PROPER DIALOG TRIGGER */}
-                <Dialog open={openModal} onOpenChange={setOpenModal}>
-                    <DialogTrigger asChild>
-                    <button className="bg-green-600 text-white px-4 py-2 rounded-lg flex gap-2">
-                        <Plus />
-                        Add Customer
-                    </button>
-                    </DialogTrigger>
-
-                    {/* MODAL */}
-                    <DialogContent className="sm:max-w-[500px]">
-                    <DialogHeader>
-                        <DialogTitle className="text-center text-blue-700 text-2xl">
-                        Add Customer
-                        </DialogTitle>
-                    </DialogHeader>
-
-                    <div className="space-y-4 mt-4">
-                        <input
-                        type="text"
-                        name="name"
-                        placeholder="Customer Name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        className="w-full border p-3 rounded-lg"
-                        />
-
-                        <input
-                        type="email"
-                        name="email"
-                        placeholder="Customer Email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        className="w-full border p-3 rounded-lg"
-                        />
-
-                        <input
-                        type="text"
-                        name="address"
-                        placeholder="Customer Address"
-                        value={formData.address}
-                        onChange={handleChange}
-                        className="w-full border p-3 rounded-lg"
-                        />
-
-                        <input
-                        type="date"
-                        name="date_of_birth"
-                        value={formData.date_of_birth}
-                        onChange={handleChange}
-                        className="w-full border p-3 rounded-lg"
-                        />
-
+                        {/* ADD CUSTOMER */}
                         <button
-                        onClick={createCustomer}
-                        disabled={saving}
-                        className="w-full bg-blue-600 text-white p-3 rounded-lg disabled:opacity-50"
+                            onClick={openCreateModal}
+                            className="bg-green-600 hover:bg-green-700 hover:scale-105 transition-all duration-200 text-white px-4 py-2 rounded-lg flex gap-2"
                         >
-                        {saving ? "Creating..." : "Create Customer"}
+                            <Plus />
+                            Add Customer
                         </button>
-                    </div>
-                    </DialogContent>
-                </Dialog>
 
                         {/* LOGOUT */}
                         <button
                             onClick={logout}
-                            className="bg-red-600 text-white px-4 py-2 rounded-lg flex gap-2"
+                            className="bg-red-600 hover:bg-red-700 transition-colors hover:scale-105 text-white px-4 py-2 rounded-lg flex gap-2"
                         >
                             <LogOut />
                             Logout
@@ -260,11 +285,11 @@ export default function CustomersPage() {
 
                                     <div className="flex justify-center gap-3">
 
-                                        <button className="bg-blue-500 text-white p-2 rounded-lg">
+                                        <button onClick={() => openEditModal(customer)} className="bg-blue-500 hover:bg-blue-600 hover:scale-105 transition-all duration-200 text-white p-2 rounded-lg">
                                             <Pencil size={18} />
                                         </button>
 
-                                        <button className="bg-red-500 text-white p-2 rounded-lg">
+                                        <button className="bg-red-500 text-white hover:bg-red-600 hover:scale-105 transition-all duration-200 p-2 rounded-lg">
                                             <Trash2 size={18} />
                                         </button>
 
@@ -279,6 +304,74 @@ export default function CustomersPage() {
                     </tbody>
 
                 </table>
+
+                {/* SINGLE REUSABLE MODAL */}
+                <Dialog open={openModal} onOpenChange={setOpenModal}>
+                    <DialogContent className="sm:max-w-[500px]">
+
+                        <DialogHeader>
+                            <DialogTitle className="text-center text-blue-700 text-2xl">
+                                {modalMode === "create"
+                                    ? "Add Customer"
+                                    : "Edit Customer"}
+                            </DialogTitle>
+                        </DialogHeader>
+
+                        <div className="space-y-4 mt-4">
+
+                            <input
+                                type="text"
+                                name="name"
+                                placeholder="Customer Name"
+                                value={formData.name}
+                                onChange={handleChange}
+                                className="w-full border p-3 rounded-lg"
+                            />
+
+                            <input
+                                type="email"
+                                name="email"
+                                placeholder="Customer Email"
+                                value={formData.email}
+                                onChange={handleChange}
+                                className="w-full border p-3 rounded-lg"
+                            />
+
+                            <input
+                                type="text"
+                                name="address"
+                                placeholder="Customer Address"
+                                value={formData.address}
+                                onChange={handleChange}
+                                className="w-full border p-3 rounded-lg"
+                            />
+
+                            <input
+                                type="date"
+                                name="date_of_birth"
+                                value={formData.date_of_birth}
+                                onChange={handleChange}
+                                className="w-full border p-3 rounded-lg"
+                            />
+
+                            <button
+                                onClick={saveCustomer}
+                                disabled={saving}
+                                className="w-full bg-blue-600 hover:bg-blue-700 hover:scale-105 transition-all text-white p-3 rounded-lg disabled:opacity-50"
+                            >
+                                {saving
+                                    ? modalMode === "create"
+                                        ? "Creating..."
+                                        : "Updating..."
+                                    : modalMode === "create"
+                                        ? "Create Customer"
+                                        : "Update Customer"}
+                            </button>
+
+                        </div>
+
+                    </DialogContent>
+                </Dialog>
 
             </div>
 
