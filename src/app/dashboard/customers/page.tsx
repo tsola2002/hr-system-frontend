@@ -18,8 +18,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { customerSchema, CustomerFormData } from "@/schemas/customerSchema";
+import Spinner from "@/components/ui/spinner";
 
 export default function CustomersPage() {
+
+    const [loading, setLoading] = useState(false);
 
     const [customers, setCustomers] = useState<Customer[]>([]);
     
@@ -65,6 +68,8 @@ export default function CustomersPage() {
     try {
       console.log("FETCHING CUSTOMERS");
 
+      setLoading(true);
+
       const response = await API.get("/customers");
 
       console.log("CUSTOMERS RESPONSE:", response.data);
@@ -74,6 +79,8 @@ export default function CustomersPage() {
       console.log(error);
 
       toast.error("Failed to load customers");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -234,52 +241,53 @@ export default function CustomersPage() {
           </div>
         </div>
 
-        <table className="w-full border">
-          <thead className="bg-blue-600 text-white">
-            <tr>
-              <th className="p-4">Name</th>
-              <th>Email</th>
-              <th>Address</th>
-              <th>Date Of Birth</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
+        {loading ? (
+          <Spinner />
+          ) : (
+            <table className="w-full border">
+              <thead className="bg-blue-600 text-white">
+                <tr>
+                  <th className="p-4">Name</th>
+                  <th>Email</th>
+                  <th>Address</th>
+                  <th>Date Of Birth</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
 
-          <tbody>
-            {customers.map((customer) => (
-              <tr
-                key={customer.id}
-                className="border-b text-center hover:bg-slate-100"
-              >
-                <td className="p-4">{customer.name}</td>
+              <tbody>
+                {customers.map((customer) => (
+                  <tr
+                    key={customer.id}
+                    className="border-b text-center hover:bg-slate-100"
+                  >
+                    <td className="p-4">{customer.name}</td>
+                    <td>{customer.email}</td>
+                    <td>{customer.address}</td>
+                    <td>{customer.date_of_birth}</td>
 
-                <td>{customer.email}</td>
+                    <td>
+                      <div className="flex justify-center gap-3">
+                        <button
+                          onClick={() => openEditModal(customer)}
+                          className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg"
+                        >
+                          <Pencil size={18} />
+                        </button>
 
-                <td>{customer.address}</td>
-
-                <td>{customer.date_of_birth}</td>
-
-                <td>
-                  <div className="flex justify-center gap-3">
-                    <button
-                      onClick={() => openEditModal(customer)}
-                      className="bg-blue-500 hover:bg-blue-600 hover:scale-105 transition-all duration-200 text-white p-2 rounded-lg"
-                    >
-                      <Pencil size={18} />
-                    </button>
-
-                    <button
-                      onClick={() =>openDeleteModal(customer)}
-                      className="bg-red-500 text-white hover:bg-red-600 hover:scale-105 transition-all duration-200 p-2 rounded-lg"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                        <button
+                          onClick={() => openDeleteModal(customer)}
+                          className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
 
         {/* SINGLE REUSABLE MODAL */}
         <Dialog open={openModal} onOpenChange={setOpenModal}>
