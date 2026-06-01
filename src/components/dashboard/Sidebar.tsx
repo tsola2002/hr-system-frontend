@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Car, Users } from "lucide-react";
 
 export default function Sidebar() {
 
@@ -14,11 +15,22 @@ export default function Sidebar() {
             <nav className="flex flex-col gap-4">
 
                 <Link
-                    href="/dashboard/customers"
-                    className="bg-white/20 p-3 rounded-lg hover:bg-white/30"
+                    href="/dashboard/leaves"
+                    className="flex items-center gap-3 bg-white/20 p-3 rounded-lg hover:bg-white/30"
                 >
+                    <Car className="w-5 h-5" />
+                    Leaves
+                </Link>
+
+                <Link
+                    href="/dashboard/customers"
+                    className="flex items-center gap-3 bg-white/20 p-3 rounded-lg hover:bg-white/30"
+                >
+                    <Users className="w-5 h-5" />
                     Customers
                 </Link>
+
+
 
             </nav>
 
